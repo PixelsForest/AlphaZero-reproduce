@@ -9,28 +9,25 @@ class Human(object):
     """human player"""
 
     def __init__(self):
-	self.player = None
+        self.player = None
 
     def set_player_ind(self, p):
-	self.player = p
+        self.player = p
 
     def get_action(self, board):
-	"""
-	the acceptable input form: [1, 1], (1, 1), "pass", 'pass'
-	"""
-	location = input("Your move:")
-	if not isinstance(location, str):
-	    move = board.location_to_move(location)
-	    return move
-	else:
-	    # "pass"
-	    return location
+        """
+        the acceptable input form:
+        """
+        x1 = int(input("Your move(line):"))
+        x2 = int(input("Your move(column):"))
+        move = board.location_to_move([x1, x2])
+        return move
 
     def __str__(self):
-	return "Human {}".format(self.player)
+        return "Human {}".format(self.player)
 
 def run():
-    board = Board()
+    board = Board(width=4, height=4)
     game = Game(board)
 
     human_player1 = Human()
