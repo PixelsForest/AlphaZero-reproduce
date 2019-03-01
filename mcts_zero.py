@@ -26,7 +26,7 @@ class TreeNode(object):
 
     def update(self, leaf_value):
         self._n_visits += 1
-        self._Q += 1.0 * (leaf_value - self.Q)/self._n_visits
+        self._Q += 1.0 * (leaf_value - self._Q)/self._n_visits
 
     def update_recursive(self, leaf_value):
         if self._parent:
@@ -51,31 +51,33 @@ class MCTS(object):
         self._c_puct = c_puct
         self._n_playout = n_playout
 
-    def _playout(self, state):
+    def _playout(self, board): # copy.deepcopy(game.board)
+        # traverse the tree to the leaf node and expand the node once
         node = self._root
         while(1):
             if node.is_leaf():
                 break
             action, node = node.select(self._c_puct)
-            state.do_move(action)         # from game.py?
+            board.do_move(action)
 
-        action_probs, leaf_value = self._policy(state)
-        end, winner = state.game_end()
+        action_probs, leaf_value = self._policy(board)
+        #print("MCTS _playout call game_end once.")
+        end, winner = board.game_end()
         if not end:
             node.expand(action_probs)
         else:
             if winner == -1:
                 leaf_value = 0.0
             else:
-                leaf_value = (1.0 if winner == state.get_current_player()
+                leaf_value = (1.0 if winner == board.get_current_player()
                               else -1.0)
 
         node.update_recursive(-leaf_value)
 
-    def get_move_probs(self, state, temp=1e-3):
+    def get_move_probs(self, board, temp=1e-3):
         for n in range(self._n_playout):
-            state_copy = copy.deepcopy(state)
-            self._playout(state_copy)
+            board_copy = copy.deepcopy(board)
+            self._playout(board_copy)
 
         act_visits = [(act, node._n_visits)
                         for act, node in self._root._children.items()]
@@ -95,10 +97,11 @@ class MCTS(object):
         return "MCTS"
 
 class MCTSPlayer(object):
-    def __init__(self, policy_value_function, c_puct=5,
+    def __init__(self, policy_value_function, steps_considered, c_puct=5,
                  n_playout=2000, is_selfplay=0):
         self.mcts = MCTS(policy_value_function, c_puct, n_playout)
         self._is_selfplay = is_selfplay
+        self.steps_considered = steps_considered
 
     def set_player_ind(self, p):
         self.player = p
@@ -126,9 +129,4 @@ class MCTSPlayer(object):
 
     def __str__(self):
         return "MCTS player {}".format(self.player)
-
-
-
-
-
 
